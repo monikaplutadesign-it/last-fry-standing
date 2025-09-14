@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Last Fry Standing</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #ffe8d6;
+            color: #4b3f3b;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .game-container {
+            background: #fff;
+            padding: 2em;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+            padding-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1.1em;
+            margin-top: 0;
+            margin-bottom: 0.5em;
+        }
+        
+        #gameStatus.message-box {
+            margin-top: 0;
+            margin-bottom: 1.5em;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #3b302e;
+            min-height: 2em;
+        }
+
+        .fry-icon-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .fry-icon {
+            font-size: 10em;
+            color: #ffc107;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .fry-icon.jump {
+            animation: jump 0.3s ease-in-out;
+        }
+
+        @keyframes jump {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        .fry-piece {
+            position: absolute;
+            bottom: -15px;
+            width: 15px;
+            height: 49px; /* Increased height by 4rem */
+            background-color: #ffc107;
+            border-radius: 3px;
+            animation-duration: 0.6s;
+            animation-timing-function: ease-out;
+            animation-fill-mode: forwards;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+        }
+
+        @keyframes fry-drop-left {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-100px, 100px) rotate(-90deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes fry-drop-right {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(100px, 100px) rotate(90deg);
+                opacity: 0;
+            }
+        }
+
+        .status-section {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: -4rem; 
+            margin-bottom: 2em;
+            flex-wrap: wrap;
+        }
+
+        .status-box {
+            padding: 1.2em;
+            border-radius: 10px;
+            width: 45%;
+            margin-top: 1em;
+        }
+
+        .status-box h2 {
+            margin-top: 0;
+            color: #5d4a3e;
+        }
+
+        .player-actions {
+            margin-top: 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .player-actions button {
+            background-color: #e76f51;
+            color: white;
+            border: none;
+            padding: 1em 2em;
+            margin: 0.5em;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 6px 0 0 #c0392b;
+            font-weight: bold;
+        }
+
+        .player-actions button:hover {
+            background-color: #d85736;
+            transform: translateY(-3px);
+            box-shadow: 0 3px 0 0 #a93226;
+        }
+
+        .player-actions button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .fry-count {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: -1.5rem;
+        }
+        
+        .fry-count b {
+            margin-bottom: -1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: #e76f51;
+            font-size: 2em;
+        }
+
+        .modal-content p {
+            font-size: 1.2em;
+            margin-bottom: 1em;
+        }
+
+        .modal-content button {
+            background-color: #e76f51;
+            color: white;
+            border: none;
+            padding: 0.8em 1.5em;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 0 0 #c0392b;
+            font-weight: bold;
+        }
+
+        .modal-content button:hover {
+            background-color: #d85736;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 0 0 #a93226;
+        }
+
+        @media (max-width: 600px) {
+            .game-header {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="game-container" style="padding-bottom: 1rem;">
+        <div id="gameStatus" class="message-box">Decide how many fries to take.</div>
+        <div class="game-header">
+            <div class="player-actions">
+                <button onclick="playerTurn(1)">Take 1 Fry</button>
+                <button onclick="playerTurn(2)">Take 2 Fries</button>
+                <button onclick="playerTurn(3)">Take 3 Fries</button>
+            </div>
+            <div class="fry-icon-container">
+                <div class="fry-icon">🍟</div>
+            </div>
+            <div class="fry-count">
+                <b>Fries left in the box:</b>
+                <span id="friesLeft" style="font-size: 6rem;">32</span>
+            </div>
+        </div>
+        <div class="status-section">
+            <div class="status-box">
+                <p>Your fries: <span id="playerFries">0</span></p>
+            </div>
+            <div class="status-box">
+                <p>AI's fries: <span id="aiFries">0</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="endGameModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle" style="font-weight: bold;"></h2>
+            <p id="modalMessage"></p>
+            <button onclick="window.location.reload()">
+                Play again
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        let friesLeft = 32;
+        let playerFries = 0;
+        let aiFries = 0;
+        let gameOver = false;
+
+        const friesLeftEl = document.getElementById('friesLeft');
+        const playerFriesEl = document.getElementById('playerFries');
+        const aiFriesEl = document.getElementById('aiFries');
+        const gameStatusEl = document.getElementById('gameStatus');
+        const playerActionsEl = document.querySelector('.player-actions');
+        const fryIconEl = document.querySelector('.fry-icon');
+        const fryIconContainerEl = document.querySelector('.fry-icon-container');
+        const endGameModal = document.getElementById('endGameModal');
+        const modalTitleEl = document.getElementById('modalTitle');
+        const modalMessageEl = document.getElementById('modalMessage');
+
+        function updateDisplay() {
+            friesLeftEl.textContent = friesLeft;
+            playerFriesEl.textContent = playerFries;
+            aiFriesEl.textContent = aiFries;
+        }
+
+        function showModal(title, message) {
+            modalTitleEl.textContent = title;
+            modalMessageEl.textContent = message;
+            endGameModal.style.display = 'flex';
+        }
+
+        function checkWinCondition(lastTaker) {
+            if (friesLeft === 0) {
+                gameOver = true;
+                playerActionsEl.style.display = 'none';
+
+                if (lastTaker === 'player') {
+                    if (playerFries > aiFries) {
+                        gameStatusEl.textContent = 'You took the last fry and won! 🎉';
+                        showModal('You Won!', 'You took the very last fry and have more fries than the AI!');
+                    } else {
+                        gameStatusEl.textContent = 'You took the last fry but have less than the AI. You lose! 😭';
+                        showModal('You Lost...', 'You took the last fry but the AI has more fries. Better luck next time!');
+                    }
+                } else if (lastTaker === 'ai') {
+                    gameStatusEl.textContent = 'Oops! The AI took the last fry. You lose! 🤖';
+                    showModal('You Lost...', 'The AI took the last fry. Better luck next time!');
+                }
+            }
+        }
+        
+        function animateFryDrop(count, direction) {
+            fryIconEl.classList.add('jump');
+            for (let i = 0; i < count; i++) {
+                const fryPiece = document.createElement('div');
+                fryPiece.className = 'fry-piece';
+                // Randomize starting position
+                const startPos = Math.random() * 80 - 40; 
+                fryPiece.style.left = `calc(50% + ${startPos}px)`;
+                if (direction === 'player') {
+                    fryPiece.style.animationName = 'fry-drop-left';
+                } else if (direction === 'ai') {
+                    fryPiece.style.animationName = 'fry-drop-right';
+                }
+                fryIconContainerEl.appendChild(fryPiece);
+            }
+            setTimeout(() => {
+                fryIconEl.classList.remove('jump');
+                // Clean up old fry pieces after animation
+                const oldFries = document.querySelectorAll('.fry-piece');
+                oldFries.forEach(fry => fry.remove());
+            }, 600);
+        }
+
+        function aiTurn() {
+            if (gameOver) return;
+
+            const buttons = playerActionsEl.querySelectorAll('button');
+            buttons.forEach(button => button.disabled = true);
+            gameStatusEl.textContent = 'AI is thinking...';
+
+            setTimeout(() => {
+                let friesToTake;
+                const remainder = (friesLeft - 1) % 4;
+                if (remainder === 0) {
+                    friesToTake = Math.floor(Math.random() * 3) + 1;
+                } else {
+                    friesToTake = remainder;
+                }
+                
+                if (friesToTake > friesLeft) {
+                    friesToTake = friesLeft;
+                }
+
+                friesLeft -= friesToTake;
+                aiFries += friesToTake;
+
+                animateFryDrop(friesToTake, 'ai');
+                
+                gameStatusEl.textContent = `The AI took ${friesToTake} fries. Decide how many fries to take.`;
+                updateDisplay();
+                checkWinCondition('ai');
+
+                buttons.forEach(button => button.disabled = false);
+            }, 1000);
+        }
+
+        function playerTurn(takeAmount) {
+            if (gameOver) return;
+
+            if (friesLeft < takeAmount) {
+                gameStatusEl.textContent = "You can't take that many fries! Try again.";
+                return;
+            }
+
+            friesLeft -= takeAmount;
+            playerFries += takeAmount;
+            
+            animateFryDrop(takeAmount, 'player');
+            
+            updateDisplay();
+            gameStatusEl.textContent = `You took ${takeAmount} fries. AI's turn...`;
+
+            checkWinCondition('player');
+            if (!gameOver) {
+                aiTurn();
+            }
+        }
+    </script>
+</body>
+</html>
